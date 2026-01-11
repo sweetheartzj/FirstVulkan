@@ -10,6 +10,8 @@ class Application {
 private:
     GLFWwindow* window{};
 
+    VkInstance instance{};
+
 public:
     void run();
 
@@ -21,4 +23,6 @@ private:
     void mainLoop() const;
 
     void cleanup() const;
+
+    void createInstance();
 };
