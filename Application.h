@@ -1,16 +1,29 @@
 #pragma once
 
 #define GLFW_INCLUDE_VULKAN
+#include <vector>
 #include <GLFW/glfw3.h>
 
 constexpr int WIDTH = 800;
 constexpr int HEIGHT = 600;
+
+const std::vector<const char*> validationLayers = {
+    "VK_LAYER_KHRONOS_validation"
+};
+
+#ifdef NDEBUG
+constexpr bool enableValidationLayers = false;
+#else
+constexpr bool enableValidationLayers = true;
+#endif
 
 class Application {
 private:
     GLFWwindow* window{};
 
     VkInstance instance{};
+
+    VkDebugUtilsMessengerEXT debugMessenger{};
 
 public:
     void run();
@@ -25,4 +38,34 @@ private:
     void cleanup() const;
 
     void createInstance();
+
+    static bool checkValidationLayerSupport();
+
+    static std::vector<const char*> getRequiredExtensions();
+
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+        void* pUserData
+    );
+
+    static void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+
+    void setupDebugMessenger();
+
+    static VkResult createDebugUtilsMessengerEXT(
+        VkInstance instance,
+        const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+        const VkAllocationCallbacks* pAllocator,
+        VkDebugUtilsMessengerEXT* pDebugMessenger
+    );
+
+    static void destroyDebugUtilsMessengerEXT(
+        VkInstance instance,
+        VkDebugUtilsMessengerEXT debugMessenger,
+        const VkAllocationCallbacks* pAllocator
+    );
+
+
 };
