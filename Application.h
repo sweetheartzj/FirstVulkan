@@ -4,6 +4,8 @@
 #include <vector>
 #include <GLFW/glfw3.h>
 
+#include "QueueFamilyIndices.h"
+
 constexpr int WIDTH = 800;
 constexpr int HEIGHT = 600;
 
@@ -24,6 +26,10 @@ private:
     VkInstance instance{};
 
     VkDebugUtilsMessengerEXT debugMessenger{};
+
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+
+    QueueFamilyIndices queueFamilyIndices;
 
 public:
     void run();
@@ -67,5 +73,8 @@ private:
         const VkAllocationCallbacks* pAllocator
     );
 
+    void pickPhysicalDevice();
+
+    static bool isDeviceSuitable(VkPhysicalDevice device);
 
 };

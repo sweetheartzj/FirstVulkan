@@ -10,6 +10,9 @@ find_package(Vulkan REQUIRED)
 
 add_executable(FirstVulkan main.cpp
         Application.cpp
-        Application.h)
+        Application.h
+        QueueFamilyIndices.cpp
+        QueueFamilyIndices.h
+)
 
 target_link_libraries(FirstVulkan PUBLIC glm::glm glfw Vulkan::Vulkan)
