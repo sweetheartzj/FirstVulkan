@@ -27,6 +27,8 @@ private:
 
     VkDebugUtilsMessengerEXT debugMessenger{};
 
+    VkSurfaceKHR surface{};
+
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 
     QueueFamilyIndices queueFamilyIndices;
@@ -35,6 +37,7 @@ private:
 
     VkQueue graphicsQueue{};
 
+    VkQueue presentQueue{};
 public:
     void run();
 
@@ -77,9 +80,11 @@ private:
         const VkAllocationCallbacks* pAllocator
     );
 
+    void createSurface();
+
     void pickPhysicalDevice();
 
-    static bool isDeviceSuitable(VkPhysicalDevice device);
+    bool isDeviceSuitable(VkPhysicalDevice device) const;
 
     void createLogicalDevice();
 

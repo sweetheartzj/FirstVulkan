@@ -3,10 +3,11 @@
 #include <vector>
 
 bool QueueFamilyIndices::isComplete() const {
-    return graphicsFamily.has_value();
+    return graphicsFamily.has_value() &&
+        presentFamily.has_value();
 }
 
-QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device) {
+QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device, const VkSurfaceKHR surface) {
     QueueFamilyIndices indices;
 
     uint32_t queueFamilyCount = 0;
@@ -22,6 +23,11 @@ QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device) {
         }
         if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
             indices.graphicsFamily = i;
+        }
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+        if (presentSupport) {
+            indices.presentFamily = i;
         }
         i++;
     }
