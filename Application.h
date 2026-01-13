@@ -31,6 +31,10 @@ private:
 
     QueueFamilyIndices queueFamilyIndices;
 
+    VkDevice logicalDevice{};
+
+    VkQueue graphicsQueue{};
+
 public:
     void run();
 
@@ -76,5 +80,7 @@ private:
     void pickPhysicalDevice();
 
     static bool isDeviceSuitable(VkPhysicalDevice device);
+
+    void createLogicalDevice();
 
 };
