@@ -7,6 +7,21 @@ bool QueueFamilyIndices::isComplete() const {
         presentFamily.has_value();
 }
 
+uint32_t* QueueFamilyIndices::data() const {
+    if (!isComplete()) {
+        return nullptr;
+    }
+    if (graphicsFamily.value() == presentFamily.value()) {
+        return new uint32_t[] {
+            graphicsFamily.value()
+        };
+    }
+    return new uint32_t[] {
+        graphicsFamily.value(),
+        presentFamily.value()
+    };
+}
+
 QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device, const VkSurfaceKHR surface) {
     QueueFamilyIndices indices;
 

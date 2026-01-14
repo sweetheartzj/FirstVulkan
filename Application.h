@@ -13,6 +13,10 @@ const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
 
+const std::vector<const char*> deviceExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
 #ifdef NDEBUG
 constexpr bool enableValidationLayers = false;
 #else
@@ -38,6 +42,12 @@ private:
     VkQueue graphicsQueue{};
 
     VkQueue presentQueue{};
+
+    VkSwapchainKHR swapChain{};
+    std::vector<VkImage> swapChainImages;
+    VkFormat swapChainImageFormat{};
+    VkExtent2D swapChainExtent{};
+
 public:
     void run();
 
@@ -87,5 +97,9 @@ private:
     bool isDeviceSuitable(VkPhysicalDevice device) const;
 
     void createLogicalDevice();
+
+    static bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+
+    void createSwapChain();
 
 };
