@@ -48,6 +48,8 @@ private:
     VkFormat swapChainImageFormat{};
     VkExtent2D swapChainExtent{};
 
+    std::vector<VkImageView> swapChainImageViews;
+
 public:
     void run();
 
@@ -101,5 +103,9 @@ private:
     static bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 
     void createSwapChain();
+
+    void createImageViews();
+
+    void createGraphicsPipeline();
 
 };
