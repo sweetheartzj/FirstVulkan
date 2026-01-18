@@ -51,6 +51,7 @@ private:
 
     std::vector<VkImageView> swapChainImageViews;
 
+    VkRenderPass renderPass{};
     VkPipelineLayout pipelineLayout{};
 
 public:
@@ -115,4 +116,5 @@ private:
 
     [[nodiscard]] VkShaderModule createShaderModule(const std::vector<char>& shaderCode) const;
 
+    void createRenderPass();
 };
