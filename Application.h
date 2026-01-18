@@ -54,6 +54,8 @@ private:
     VkRenderPass renderPass{};
     VkPipelineLayout pipelineLayout{};
 
+    VkPipeline graphicsPipeline{};
+
 public:
     void run();
 
