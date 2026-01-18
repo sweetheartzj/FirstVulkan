@@ -1,6 +1,7 @@
 #include "Application.h"
 
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <ostream>
 #include <set>
@@ -30,6 +31,7 @@ void Application::initVulkan() {
     createLogicalDevice();
     createSwapChain();
     createImageViews();
+    createGraphicsPipeline();
 }
 
 void Application::mainLoop() const {
@@ -418,5 +420,59 @@ void Application::createImageViews() {
         }
     }
     std::cout << "Image views created" << std::endl;
+}
+
+void Application::createGraphicsPipeline() {
+    const auto vertShaderCode = readFile("./shaders/shader.vert.spv");
+    const auto fragShaderCode = readFile("./shaders/shader.frag.spv");
+
+    const VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
+    const VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
+
+    const VkPipelineShaderStageCreateInfo vertShaderStageCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_VERTEX_BIT,
+        .module = vertShaderModule,
+        .pName = "main",
+    };
+    const VkPipelineShaderStageCreateInfo fragShaderStageCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+        .module = fragShaderModule,
+        .pName = "main",
+    };
+    VkPipelineShaderStageCreateInfo shaderStages[] = {vertShaderStageCreateInfo, fragShaderStageCreateInfo};
+
+
+    vkDestroyShaderModule(logicalDevice, vertShaderModule, nullptr);
+    vkDestroyShaderModule(logicalDevice, fragShaderModule, nullptr);
+}
+
+std::vector<char> Application::readFile(const std::string &filename) {
+    std::ifstream file(filename, std::ios::ate | std::ios::binary);
+
+    if (!file.is_open()) {
+        throw std::runtime_error("failed to open file: " + filename);
+    }
+    const auto fileSize = file.tellg();
+    std::vector<char> buffer(fileSize);
+    file.seekg(0);
+    file.read(buffer.data(), fileSize);
+    file.close();
+    return buffer;
+}
+
+VkShaderModule Application::createShaderModule(const std::vector<char> &shaderCode) const {
+    const VkShaderModuleCreateInfo createInfo{
+        .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
+        .codeSize = shaderCode.size(),
+        .pCode = reinterpret_cast<const uint32_t*>(shaderCode.data())
+    };
+
+    VkShaderModule shaderModule;
+    if (vkCreateShaderModule(logicalDevice, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create shader module!");
+    }
+     return shaderModule;
 }
 

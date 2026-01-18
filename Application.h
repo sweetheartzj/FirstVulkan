@@ -1,6 +1,7 @@
 #pragma once
 
 #define GLFW_INCLUDE_VULKAN
+#include <string>
 #include <vector>
 #include <GLFW/glfw3.h>
 
@@ -107,5 +108,9 @@ private:
     void createImageViews();
 
     void createGraphicsPipeline();
+
+    static std::vector<char> readFile(const std::string& filename);
+
+    [[nodiscard]] VkShaderModule createShaderModule(const std::vector<char>& shaderCode) const;
 
 };

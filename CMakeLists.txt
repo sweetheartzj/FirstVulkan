@@ -18,3 +18,5 @@ add_executable(FirstVulkan main.cpp
 )
 
 target_link_libraries(FirstVulkan PUBLIC glm::glm glfw Vulkan::Vulkan)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
