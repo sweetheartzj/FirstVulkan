@@ -70,6 +70,8 @@ private:
 
     uint32_t currentFrame = 0;
 
+    bool framebufferResized = false;
+
 public:
     void run();
 
@@ -145,4 +147,10 @@ private:
     void drawFrame();
 
     void createSyncObjects();
+
+    void recreateSwapChain();
+
+    void cleanupSwapChain() const;
+
+    static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
 };
