@@ -58,6 +58,10 @@ private:
 
     std::vector<VkFramebuffer> swapChainFramebuffers;
 
+    VkCommandPool commandPool{};
+
+    VkCommandBuffer commandBuffer{};
+
 public:
     void run();
 
@@ -123,4 +127,10 @@ private:
     void createRenderPass();
 
     void createSwapChainFramebuffers();
+
+    void createCommandPool();
+
+    void createCommandBuffer();
+
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
 };
