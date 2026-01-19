@@ -62,6 +62,10 @@ private:
 
     VkCommandBuffer commandBuffer{};
 
+    VkSemaphore imageAvailableSemaphore{};
+    VkSemaphore renderFinishedSemaphore{};
+    VkFence inFlightFence{};
+
 public:
     void run();
 
@@ -133,4 +137,8 @@ private:
     void createCommandBuffer();
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
+
+    void drawFrame() const;
+
+    void createSyncObjects();
 };
