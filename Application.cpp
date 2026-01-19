@@ -35,11 +35,11 @@ void Application::initVulkan() {
     createGraphicsPipeline();
     createSwapChainFramebuffers();
     createCommandPool();
-    createCommandBuffer();
+    createCommandBuffers();
     createSyncObjects();
 }
 
-void Application::mainLoop() const {
+void Application::mainLoop() {
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
         drawFrame();
@@ -49,9 +49,11 @@ void Application::mainLoop() const {
 }
 
 void Application::cleanup() const {
-    vkDestroySemaphore(logicalDevice, imageAvailableSemaphore, nullptr);
-    vkDestroySemaphore(logicalDevice, renderFinishedSemaphore, nullptr);
-    vkDestroyFence(logicalDevice, inFlightFence, nullptr);
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroySemaphore(logicalDevice, imageAvailableSemaphores[i], nullptr);
+        vkDestroySemaphore(logicalDevice, renderFinishedSemaphores[i], nullptr);
+        vkDestroyFence(logicalDevice, inFlightFences[i], nullptr);
+    }
 
     vkDestroyCommandPool(logicalDevice, commandPool, nullptr);
 
@@ -669,6 +671,7 @@ void Application::createRenderPass() {
         throw std::runtime_error("failed to create render pass!");
     }
 
+    std::cout << "Render pass created" << std::endl;
 }
 
 void Application::createSwapChainFramebuffers() {
@@ -692,6 +695,7 @@ void Application::createSwapChainFramebuffers() {
             throw std::runtime_error("failed to create framebuffer!");
         }
     }
+    std::cout << "SwapChain Framebuffers created" << std::endl;
 }
 
 void Application::createCommandPool() {
@@ -708,15 +712,16 @@ void Application::createCommandPool() {
     std::cout << "Command pool created" << std::endl;
 }
 
-void Application::createCommandBuffer() {
+void Application::createCommandBuffers() {
+    commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
     const VkCommandBufferAllocateInfo commandBufferAllocateInfo{
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .commandPool = commandPool,
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = 1
+        .commandBufferCount = static_cast<uint32_t>(commandBuffers.size())
     };
 
-    if (vkAllocateCommandBuffers(logicalDevice, &commandBufferAllocateInfo, &commandBuffer) != VK_SUCCESS) {
+    if (vkAllocateCommandBuffers(logicalDevice, &commandBufferAllocateInfo, commandBuffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers!");
     }
 
@@ -775,24 +780,24 @@ void Application::recordCommandBuffer(VkCommandBuffer commandBuffer, const uint3
     }
 }
 
-void Application::drawFrame() const {
-    vkWaitForFences(logicalDevice, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
-    vkResetFences(logicalDevice, 1, &inFlightFence);
+void Application::drawFrame() {
+    vkWaitForFences(logicalDevice, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+    vkResetFences(logicalDevice, 1, &inFlightFences[currentFrame]);
 
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(logicalDevice, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+    vkAcquireNextImageKHR(logicalDevice, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
-    vkResetCommandBuffer(commandBuffer, 0);
-    recordCommandBuffer(commandBuffer, imageIndex);
+    vkResetCommandBuffer(commandBuffers[currentFrame], 0);
+    recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
 
     VkSemaphore waitSemaphores[] = {
-        imageAvailableSemaphore
+        imageAvailableSemaphores[currentFrame]
     };
     VkPipelineStageFlags waitStages[] = {
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT
     };
     VkSemaphore signalSemaphores[] = {
-        renderFinishedSemaphore
+        renderFinishedSemaphores[currentFrame]
     };
 
     const VkSubmitInfo submitInfo{
@@ -801,12 +806,12 @@ void Application::drawFrame() const {
         .pWaitSemaphores = waitSemaphores,
         .pWaitDstStageMask = waitStages,
         .commandBufferCount = 1,
-        .pCommandBuffers = &commandBuffer,
+        .pCommandBuffers = &commandBuffers[currentFrame],
         .signalSemaphoreCount = 1,
         .pSignalSemaphores = signalSemaphores
     };
 
-    if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFence) != VK_SUCCESS) {
+    if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
 
@@ -814,7 +819,7 @@ void Application::drawFrame() const {
         swapChain
     };
 
-    VkPresentInfoKHR presentInfo{
+    const VkPresentInfoKHR presentInfo{
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
         .waitSemaphoreCount = 1,
         .pWaitSemaphores = signalSemaphores,
@@ -826,9 +831,14 @@ void Application::drawFrame() const {
 
     vkQueuePresentKHR(presentQueue, &presentInfo);
 
+    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
 void Application::createSyncObjects() {
+    imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+
     constexpr VkSemaphoreCreateInfo semaphoreCreateInfo{
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
     };
@@ -838,11 +848,13 @@ void Application::createSyncObjects() {
         .flags = VK_FENCE_CREATE_SIGNALED_BIT
     };
 
-    if (vkCreateSemaphore(logicalDevice, &semaphoreCreateInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS ||
-        vkCreateSemaphore(logicalDevice, &semaphoreCreateInfo, nullptr, &renderFinishedSemaphore) != VK_SUCCESS ||
-        vkCreateFence(logicalDevice, &fenceCreateInfo, nullptr, &inFlightFence) != VK_SUCCESS
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        if (vkCreateSemaphore(logicalDevice, &semaphoreCreateInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
+        vkCreateSemaphore(logicalDevice, &semaphoreCreateInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
+        vkCreateFence(logicalDevice, &fenceCreateInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS
     ) {
-        throw std::runtime_error("failed to create synchronization objects!");
+            throw std::runtime_error("failed to create synchronization objects!");
+    }
     }
 
     std::cout << "Synchronization objects created" << std::endl;

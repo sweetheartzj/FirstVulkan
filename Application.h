@@ -7,6 +7,8 @@
 
 #include "QueueFamilyIndices.h"
 
+constexpr int MAX_FRAMES_IN_FLIGHT = 2;
+
 constexpr int WIDTH = 800;
 constexpr int HEIGHT = 600;
 
@@ -60,11 +62,13 @@ private:
 
     VkCommandPool commandPool{};
 
-    VkCommandBuffer commandBuffer{};
+    std::vector<VkCommandBuffer> commandBuffers{};
 
-    VkSemaphore imageAvailableSemaphore{};
-    VkSemaphore renderFinishedSemaphore{};
-    VkFence inFlightFence{};
+    std::vector<VkSemaphore> imageAvailableSemaphores{};
+    std::vector<VkSemaphore> renderFinishedSemaphores{};
+    std::vector<VkFence> inFlightFences{};
+
+    uint32_t currentFrame = 0;
 
 public:
     void run();
@@ -74,7 +78,7 @@ private:
 
     void initVulkan();
 
-    void mainLoop() const;
+    void mainLoop();
 
     void cleanup() const;
 
@@ -134,11 +138,11 @@ private:
 
     void createCommandPool();
 
-    void createCommandBuffer();
+    void createCommandBuffers();
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) const;
 
-    void drawFrame() const;
+    void drawFrame();
 
     void createSyncObjects();
 };
