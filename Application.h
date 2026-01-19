@@ -56,6 +56,8 @@ private:
 
     VkPipeline graphicsPipeline{};
 
+    std::vector<VkFramebuffer> swapChainFramebuffers;
+
 public:
     void run();
 
@@ -119,4 +121,6 @@ private:
     [[nodiscard]] VkShaderModule createShaderModule(const std::vector<char>& shaderCode) const;
 
     void createRenderPass();
+
+    void createSwapChainFramebuffers();
 };
