@@ -37,6 +37,7 @@ void Application::initVulkan() {
     createGraphicsPipeline();
     createSwapChainFramebuffers();
     createCommandPool();
+    createVertexBuffer();
     createCommandBuffers();
     createSyncObjects();
 }
@@ -52,6 +53,9 @@ void Application::mainLoop() {
 
 void Application::cleanup() const {
     cleanupSwapChain();
+
+    vkDestroyBuffer(logicalDevice, vertexBuffer, nullptr);
+    vkFreeMemory(logicalDevice, vertexBufferMemory, nullptr);
 
     vkDestroyPipeline(logicalDevice, graphicsPipeline, nullptr);
     vkDestroyPipelineLayout(logicalDevice, pipelineLayout, nullptr);
@@ -768,7 +772,11 @@ void Application::recordCommandBuffer(const VkCommandBuffer commandBuffer, const
     };
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+    const VkBuffer vertexBuffers[] = {vertexBuffer};
+    constexpr VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+    vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
 
@@ -904,4 +912,55 @@ void Application::cleanupSwapChain() const {
 void Application::framebufferResizeCallback(GLFWwindow *window, int width, int height) {
     const auto app = static_cast<Application *>(glfwGetWindowUserPointer(window));
     app->framebufferResized = true;
+}
+
+void Application::createVertexBuffer() {
+    const VkBufferCreateInfo bufferCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = sizeof(vertices[0]) * vertices.size(),
+        .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+    };
+
+    if (vkCreateBuffer(logicalDevice, &bufferCreateInfo, nullptr, &vertexBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create vertex buffer!");
+    }
+
+    VkMemoryRequirements memoryRequirements;
+    vkGetBufferMemoryRequirements(logicalDevice, vertexBuffer, &memoryRequirements);
+
+    const VkMemoryAllocateInfo memoryAllocateInfo{
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .allocationSize = memoryRequirements.size,
+        .memoryTypeIndex = findMemoryType(
+            memoryRequirements.memoryTypeBits,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+        )
+    };
+
+    if (vkAllocateMemory(logicalDevice, &memoryAllocateInfo, nullptr, &vertexBufferMemory) != VK_SUCCESS) {
+        throw std::runtime_error("failed to allocate vertex buffer memory!");
+    }
+
+    vkBindBufferMemory(logicalDevice, vertexBuffer, vertexBufferMemory, 0);
+
+    void *data;
+    vkMapMemory(logicalDevice, vertexBufferMemory, 0, bufferCreateInfo.size, 0, &data);
+    memcpy(data, vertices.data(), bufferCreateInfo.size);
+    vkUnmapMemory(logicalDevice, vertexBufferMemory);
+
+
+    std::cout << "Vertex buffer created" << std::endl;
+}
+
+uint32_t Application::findMemoryType(const uint32_t typeFilter, const VkMemoryPropertyFlags propertyFlags) const {
+    VkPhysicalDeviceMemoryProperties memoryProperties;
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
+    for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++) {
+        if ((typeFilter & (1 << i)) && (memoryProperties.memoryTypes[i].propertyFlags & propertyFlags) == propertyFlags) {
+            return i;
+        }
+    }
+
+    throw std::runtime_error("failed to find suitable memory type!");
 }

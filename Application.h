@@ -81,6 +81,9 @@ private:
 
     bool framebufferResized = false;
 
+    VkBuffer vertexBuffer{};
+    VkDeviceMemory vertexBufferMemory{};
+
 public:
     void run();
 
@@ -162,4 +165,8 @@ private:
     void cleanupSwapChain() const;
 
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
+
+    void createVertexBuffer();
+
+    [[nodiscard]] uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags propertyFlags) const;
 };
