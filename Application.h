@@ -6,6 +6,7 @@
 #include <GLFW/glfw3.h>
 
 #include "QueueFamilyIndices.h"
+#include "Vertex.h"
 
 constexpr int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -25,6 +26,14 @@ constexpr bool enableValidationLayers = false;
 #else
 constexpr bool enableValidationLayers = true;
 #endif
+
+const std::vector<Vertex> vertices = {
+    {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+
+};
+
 
 class Application {
 private:

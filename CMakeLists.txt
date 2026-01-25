@@ -15,6 +15,8 @@ add_executable(FirstVulkan main.cpp
         QueueFamilyIndices.h
         SwapChainSupportDetails.cpp
         SwapChainSupportDetails.h
+        Vertex.h
+        Vertex.cpp
 )
 
 target_link_libraries(FirstVulkan PUBLIC glm::glm glfw Vulkan::Vulkan)
