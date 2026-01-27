@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(glm CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(Vulkan REQUIRED)
+find_package(Stb REQUIRED)
 
 add_executable(FirstVulkan main.cpp
         Application.cpp
@@ -23,3 +24,4 @@ add_executable(FirstVulkan main.cpp
 target_link_libraries(FirstVulkan PUBLIC glm::glm glfw Vulkan::Vulkan)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/textures DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
