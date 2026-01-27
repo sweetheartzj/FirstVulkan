@@ -66,6 +66,7 @@ private:
     std::vector<VkImageView> swapChainImageViews;
 
     VkRenderPass renderPass{};
+    VkDescriptorSetLayout descriptorSetLayout{};
     VkPipelineLayout pipelineLayout{};
 
     VkPipeline graphicsPipeline{};
@@ -88,6 +89,13 @@ private:
     VkDeviceMemory vertexBufferMemory{};
     VkBuffer indexBuffer{};
     VkDeviceMemory indexBufferMemory{};
+
+    std::vector<VkBuffer> uniformBuffers;
+    std::vector<VkDeviceMemory> uniformBuffersMemory;
+    std::vector<void*> uniformBuffersMapped;
+
+    VkDescriptorPool descriptorPool{};
+    std::vector<VkDescriptorSet> descriptorSets;
 
 public:
     void run();
@@ -180,4 +188,14 @@ private:
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) const;
 
     void createIndexBuffer();
+
+    void createDescriptorSetLayout();
+
+    void createUniformBuffers();
+
+    void updateUniformBuffer(uint32_t currentImage) const;
+
+    void createDescriptorPool();
+
+    void createDescriptorSets();
 };

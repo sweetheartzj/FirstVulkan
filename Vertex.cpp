@@ -11,7 +11,7 @@ VkVertexInputBindingDescription Vertex::getBindingDescription() {
 }
 
 std::array<VkVertexInputAttributeDescription, 2> Vertex::getAttributeDescriptions() {
-    std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{
+    constexpr std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{
         VkVertexInputAttributeDescription{
             .location = 0,
             .binding = 0,

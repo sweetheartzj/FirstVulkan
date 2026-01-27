@@ -17,6 +17,7 @@ add_executable(FirstVulkan main.cpp
         SwapChainSupportDetails.h
         Vertex.h
         Vertex.cpp
+        Descriptor.h
 )
 
 target_link_libraries(FirstVulkan PUBLIC glm::glm glfw Vulkan::Vulkan)
