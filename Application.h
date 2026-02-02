@@ -103,6 +103,9 @@ private:
     VkImage textureImage{};
     VkDeviceMemory textureImageMemory{};
 
+    VkImageView textureImageView{};
+    VkSampler textureSampler{};
+
 
 public:
     void run();
@@ -221,4 +224,10 @@ private:
     void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height) const;
+
+    void createTextureImageView();
+
+    VkImageView createImageView(VkImage image, VkFormat format) const;
+
+    void createTextureSampler();
 };
