@@ -1058,7 +1058,7 @@ void Application::createIndexBuffer() {
 }
 
 void Application::createDescriptorSetLayout() {
-    VkDescriptorSetLayoutBinding uboLayoutBinding{
+    constexpr VkDescriptorSetLayoutBinding uboLayoutBinding{
         .binding = 0,
         .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
         .descriptorCount = 1,
@@ -1066,10 +1066,21 @@ void Application::createDescriptorSetLayout() {
         .pImmutableSamplers = nullptr
     };
 
+    constexpr VkDescriptorSetLayoutBinding samplerLayoutBinding{
+        .binding = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+        .descriptorCount = 1,
+        .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+        .pImmutableSamplers = nullptr
+    };
+
+    constexpr std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
+
+    // ReSharper disable once CppVariableCanBeMadeConstexpr
     const VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo{
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-        .bindingCount = 1,
-        .pBindings = &uboLayoutBinding
+        .bindingCount = static_cast<uint32_t>(bindings.size()),
+        .pBindings = bindings.data()
     };
 
     if (vkCreateDescriptorSetLayout(logicalDevice, &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
@@ -1122,16 +1133,23 @@ void Application::updateUniformBuffer(const uint32_t currentImage) const {
 }
 
 void Application::createDescriptorPool() {
-    VkDescriptorPoolSize poolSize{
-        .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT)
+    std::array<VkDescriptorPoolSize, 2> poolSizes = {
+        VkDescriptorPoolSize{
+            .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT)
+        },
+        VkDescriptorPoolSize{
+            .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT)
+        }
     };
+
 
     const VkDescriptorPoolCreateInfo poolCreateInfo{
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT),
-        .poolSizeCount = 1,
-        .pPoolSizes = &poolSize,
+        .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
+        .pPoolSizes = poolSizes.data(),
     };
 
     if (vkCreateDescriptorPool(logicalDevice, &poolCreateInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
@@ -1163,19 +1181,38 @@ void Application::createDescriptorSets() {
             .range = sizeof(UniformBufferObject)
         };
 
-        VkWriteDescriptorSet descriptorWrite{
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet = descriptorSets[i],
-            .dstBinding = 0,
-            .dstArrayElement = 0,
-            .descriptorCount = 1,
-            .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .pImageInfo = nullptr,
-            .pBufferInfo = &bufferInfo,
-            .pTexelBufferView = nullptr
+        VkDescriptorImageInfo imageInfo{
+            .sampler = textureSampler,
+            .imageView = textureImageView,
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
         };
 
-        vkUpdateDescriptorSets(logicalDevice, 1, &descriptorWrite, 0, nullptr);
+        std::array<VkWriteDescriptorSet, 2> descriptorWrites{
+            VkWriteDescriptorSet{
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet = descriptorSets[i],
+                .dstBinding = 0,
+                .dstArrayElement = 0,
+                .descriptorCount = 1,
+                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .pImageInfo = nullptr,
+                .pBufferInfo = &bufferInfo,
+                .pTexelBufferView = nullptr
+            },
+            VkWriteDescriptorSet{
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet = descriptorSets[i],
+                .dstBinding = 1,
+                .dstArrayElement = 0,
+                .descriptorCount = 1,
+                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .pImageInfo = &imageInfo,
+                .pBufferInfo = nullptr,
+                .pTexelBufferView = nullptr
+            }
+        };
+
+        vkUpdateDescriptorSets(logicalDevice, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
 
     std::cout << "Descriptor sets created" << std::endl;
