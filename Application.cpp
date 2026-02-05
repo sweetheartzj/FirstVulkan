@@ -7,6 +7,9 @@
 #include <ostream>
 #include <set>
 #include <stdexcept>
+
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -44,6 +47,7 @@ void Application::initVulkan() {
     createGraphicsPipeline();
     createSwapChainFramebuffers();
     createCommandPool();
+    createDepthResources();
     createTextureImage();
     createTextureImageView();
     createTextureSampler();
@@ -1479,4 +1483,31 @@ void Application::createTextureSampler() {
     }
 
     std::cout << "Texture Sampler Created" << std::endl;
+}
+
+void Application::createDepthResources() {
+}
+
+VkFormat Application::findSupportedFormat(const std::vector<VkFormat> &candidates, const VkImageTiling tiling,
+    const VkFormatFeatureFlags features) const {
+    for (const VkFormat format: candidates) {
+        VkFormatProperties formatProperties;
+        vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &formatProperties);
+
+        if (tiling == VK_IMAGE_TILING_LINEAR && (formatProperties.linearTilingFeatures & features) == features) {
+            return format;
+        } else if (tiling == VK_IMAGE_TILING_OPTIMAL && (formatProperties.optimalTilingFeatures & features) == features) {
+            return format;
+        }
+    }
+
+    throw std::runtime_error("failed to find supported format!");
+}
+
+VkFormat Application::findDepthFormat() const {
+    return findSupportedFormat(
+        {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT},
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+    );
 }
